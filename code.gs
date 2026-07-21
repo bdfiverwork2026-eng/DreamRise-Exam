@@ -1,7 +1,7 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
  * ║         DreamRise Web App — v70.0 (Self-Syncing Edition)         ║
- * ║  Developer: Muhammad Ibrahim                                     ║
+ * ║  Developer: Muhammad Ibrahim  সিদ্দিক                                     ║
  * ║  Fixes from v69:                                                 ║
  * ║   ✅ NEW: Auto-Sync on Portal Search — শীট ম্যানুয়ালি না        ║
  * ║      খুললেও, স্টুডেন্ট যখন রেজাল্ট পোর্টালে ফোন নম্বর দিয়ে      ║
