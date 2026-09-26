@@ -2,6 +2,48 @@
 
 All notable changes to DreamRise are tracked here.
 
+## [Unreleased] — Answer Key: fixes, design refresh & number toggle
+
+### Added
+- Answer Key PDF: question-number badge can now be hidden/revealed with a
+  toggle button — only the number hides, the "প্রশ্ন" label badge itself
+  stays, for exams whose question text already carries its own numbering.
+- Answer Key PDF: design refresh — options laid out in a 2x2 grid (fewer
+  pages to print), a numbered badge per question, accent-bordered cards,
+  and an explicit A4 `@page` size/margin for print.
+
+### Changed
+- Removed the Answer Key's separate per-exam mark override
+  (`akPosMark`/`akNegMark`, previously set via its own menu prompt) — the
+  Answer Key now always reads its positive/negative marking directly from
+  the main Setup Wizard, so it can never drift out of sync with the exam
+  it's describing.
+- Removed the separate online-link version of the Answer Key (the
+  `?page=answerkey` web app route, its `AnswerPage.html` template, and the
+  "🔗 Answer Key Web App নির্দেশিকা" menu item) — the "📄 Answer Key (দেখুন ও
+  PDF নিন)" dialog is now the only way to view, print, or download it.
+
+### Fixed
+- **Logo not showing on the Answer Key PDF** — `DR_LOGO_LIGHT_URL` pointed
+  at `Logo_For_Light.png`, but the actual file in this repo is
+  `Logo_For_light.png` (lowercase "l"); GitHub's raw-file links are
+  case-sensitive, so the mismatch silently 404'd every time. Corrected the
+  constant to match the real file name.
+- **Header / marking-scheme line not repeating on every printed page** —
+  the previous `div` + `table-header-group` technique broke because its
+  contents used `display:flex`, a known Chrome print-engine bug where
+  flex children inside a repeating table header aren't reliably repeated.
+  Rebuilt with a real `<table><thead>`, which Chrome repeats correctly on
+  every page without any extra CSS trick.
+- **Stuck negative-marking override showing "no negative marking" on exams
+  that had one** — the per-exam override above, once set for one exam
+  (e.g. one without negative marking), persisted in Script Properties
+  indefinitely and silently overrode every later exam's real value. Fixed
+  by removing the override feature entirely (see *Changed*, above).
+- Print/PDF text on the Answer Key sheet was inherited from the small
+  on-screen `px` font sizes; print now uses explicit, larger `pt` sizes so
+  printed/PDF copies are legible.
+
 ## [Unreleased] — Portal badges & branding polish
 
 ### Added
