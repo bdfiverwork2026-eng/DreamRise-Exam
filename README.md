@@ -4,13 +4,18 @@ DreamRise is a Google Apps Script + Google Sheets system for running competitive
 admission exams: it scores MCQ answer sheets (with optional per-subject rules and
 negative marking), optionally adds written/homework marks, builds a ranking
 sheet and a printable PDF report, and publishes a phone-number-searchable
-result portal as a public web app.
+result portal as a public web app. It can also generate a separate, branded
+**Answer Key & Explanation** sheet for a Google Form-based MCQ exam, so
+students can check their own answers after the exam ends.
 
 **Live logo/branding assets:** hosted in this repo (`Logo_For_Light.png`,
 `Logo_For_Dark.png`) and referenced directly by URL from the script, so the
 same logo updates everywhere (Setup Wizard, Ranking Page, PDF Report,
-Statistics dialog, and the result portal) the moment the files here are
-replaced.
+Statistics dialog, Answer Key sheet, and the result portal) the moment the
+files here are replaced. **Note:** GitHub's raw-file links are case-sensitive
+— the constants in `Code.gs` (`DR_LOGO_LIGHT_URL`, `DR_LOGO_DARK_URL`) must
+match each file's name exactly, including case, or the logo silently fails
+to load (shows as broken/missing) everywhere it's used.
 
 ## Features
 
@@ -29,6 +34,16 @@ replaced.
   breakdown, per-subject **and** per-Additional-Mark pass/fail badges (so a
   specific weak subject is impossible to miss), confetti for top ranks, a
   motivational banner for fails, and a print/PDF button.
+- **Answer Key & Explanation Sheet** — a separate flow, independent of the
+  scoring system above: pulls MCQ questions (up to ~100) straight from a
+  Google Form into an "Answer Setup" sheet — auto-filling correct answers
+  and explanations if the Form is in Quiz mode — then renders a branded,
+  printable Answer Key (correct answers highlighted, per-question
+  explanations, question numbering can be hidden/revealed) that opens
+  directly in a dialog and saves to PDF via the browser's print, with no
+  Drive/Doc file created. Its marking-scheme line (correct/negative
+  marks, total questions) always reflects whatever is configured in the
+  main Setup Wizard, so it can't drift out of sync with the exam.
 - **Fail/Weak Report** — a WhatsApp-ready outreach list, split into students
   who failed overall and students who passed but are weak in a specific
   subject, each with a pre-written (editable) message naming the weak
@@ -43,10 +58,10 @@ replaced.
 
 | File | Purpose |
 |---|---|
-| `Code.gs` | All server-side logic: scoring engine, ranking/report rendering, web app endpoints, triggers, statistics, fail report. |
+| `Code.gs` | All server-side logic: scoring engine, ranking/report rendering, web app endpoints, triggers, statistics, fail report, and the Answer Key/explanation sheet. |
 | `SetupUI.html` | Modal dialog (Setup Wizard) for configuring an exam: marks, answer key row, subjects, Additional Mark. |
 | `webapp.html` | The public-facing result portal (`doGet`), including the pass/fail badge UI and print/PDF styling. |
-| `Logo_For_Light.png` / `Logo_For_Dark.png` | Brand logos referenced by URL from the script — replacing these files updates the logo everywhere. |
+| `Logo_For_Light.png` / `Logo_For_Dark.png` | Brand logos referenced by URL from the script — replacing these files updates the logo everywhere. File names are case-sensitive; keep them exactly as-is. |
 
 ## Setup (new spreadsheet)
 
@@ -170,7 +185,7 @@ row added for the answer key.
 | Field | What it does |
 |---|---|
 | পরীক্ষার নাম (Exam name) | Shown on the Ranking Page, PDF Report, and portal. |
-| সঠিক মার্ক (+) / ভুল (নেগেটিভ) | Marks awarded per correct answer / deducted per wrong answer. |
+| সঠিক মার্ক (+) / ভুল (নেগেটিভ) | Marks awarded per correct answer / deducted per wrong answer. Also the marks shown on the Answer Key sheet (see below) — it always follows these values. |
 | অ্যানসার কী রো নম্বর | The spreadsheet row number (1-based) containing the answer key. |
 | সামগ্রিক পাস মার্ক (Total Pass %) | The percentage of the (grand) full marks a student needs to pass overall. |
 | সাবজেক্ট ভিত্তিক কন্ডিশন আছে? | **না** — score the whole question range as one block. **হ্যাঁ** — split into named subjects, each [...]
@@ -218,6 +233,10 @@ triggers described below.
 | 📊 Show Statistics | Score distribution, rank-band breakdown, and subject overview charts in a printable dialog. |
 | ❌ Fail/Weak Report (WhatsApp) | Two lists — students who failed overall, and students who passed but are weak in a specific subject — each row has a ready-to-send (editable) WhatsApp mess[...]
 | 🔁 Reset System Settings | Wipes all saved configuration, cache, and the backup sheet. Use only if you want to reconfigure an exam from a blank slate — you'll need to run Setup again afterw[...]
+| 📘 ফর্ম থেকে প্রশ্ন আনুন (Answer Key) | Pulls MCQ questions (up to ~100) from a linked Google Form into an "Answer Setup" sheet, auto-filling correct answers/explanations if the Form is in Quiz mode. |
+| 📝 Answer Key সেটিংস (নাম/মার্ক) | Sets the exam name shown on the Answer Key sheet. The marking scheme is not set here — it always follows the main Setup Wizard's marks. |
+| 🧮 Answer Key Row অটো বসাও (সোর্স শীটে) | Auto-generates an Answer Key row in the main response sheet from the correct answers set in "Answer Setup", ready to be pointed at by অ্যানসার কী রো নম্বর above. |
+| 📄 Answer Key (দেখুন ও PDF নিন) | Opens the branded, printable Answer Key sheet — correct answers highlighted, explanations shown, question numbering can be hidden/revealed with a toggle. "Print / Download PDF" saves it directly; no Drive/Doc file is created. |
 
 ### 6. The student-facing portal
 
@@ -235,6 +254,27 @@ and:
 4. Top-3 and rank-1 finishers get a confetti animation; failing students see
    a motivational message instead of just a bare "FAIL."
 
+### 7. The Answer Key sheet (separate from scoring)
+
+This is an independent flow for Google Form-based MCQ exams (up to ~100
+questions), for handing students something to check their own answers
+against after the exam ends — it does not feed into the ranking/scoring
+system above unless you explicitly use "Answer Key Row অটো বসাও" to copy its
+correct answers into the main response sheet as an answer-key row.
+
+1. **📘 ফর্ম থেকে প্রশ্ন আনুন** — fetches every question from the linked Form
+   into an "Answer Setup" sheet, one row per question (Correct Answer and
+   Explanation columns auto-filled if the Form is in Quiz mode).
+2. Fill in (or correct) each row's **Correct Answer** (A/B/C/D) and, if you
+   want, an **Explanation**.
+3. **📄 Answer Key (দেখুন ও PDF নিন)** — opens a printable, branded sheet: the
+   marking scheme (from the main Setup Wizard), every question with the
+   correct option highlighted and its explanation (if any), and a
+   "Print / Download PDF" button. A toggle button can hide the question
+   number badge (keeping the "প্রশ্ন" label) for cases where the question
+   text already has its own numbering.
+
+## Notes
 
 - All UI/PDF text is in Bengali (Anek Bangla / Hind Siliguri fonts); the menu
   and inline code comments are bilingual.
@@ -259,10 +299,6 @@ Here is a quick glimpse of what you are getting out of the box:
 <p align="center">
   <em>(Left: Public Result Portal | Right: Auto-Generated PDF Report)</em>
 </p>
-
-
-
-
 
 Developed by **Muhammad Ibrahim** for DreamRise.
 Facebook: [DreamRise](https://www.facebook.com/dreamriseadmission) ·
