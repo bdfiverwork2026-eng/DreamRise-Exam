@@ -91,6 +91,7 @@ echo !code.js >> .claspignore
 echo !code.gs >> .claspignore
 echo !SetupUI.html >> .claspignore
 echo !webapp.html >> .claspignore
+echo !AnswerPage.html >> .claspignore
 echo !appsscript.json >> .claspignore
 echo [+] Created strict .claspignore (Whitelisted required files only)
 
